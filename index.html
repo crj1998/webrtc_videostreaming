@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="description" content="WebRTC code samples">
+    <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1, maximum-scale=1">
+    <meta itemprop="description" content="Client-side WebRTC code samples">
+    <meta itemprop="image" content="icon.png">
+    <meta itemprop="name" content="WebRTC code samples">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta id="theme-color" name="theme-color" content="#ffffff">
+
+    <base target="_blank">
+
+    <title>Video to peer connection</title>
+
+    <link rel="icon" sizes="192x192" href="icon.png">
+    <link href="//fonts.googleapis.com/css?family=Roboto:300,400,500,700" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="css/default.css" />
+    <link rel="stylesheet" href="css/main.css" />
+
+</head>
+
+<body>
+    <div id="container">
+        <h1>WebRTC samples <span>Stream from a video to a peer connection</span></h1>
+
+        <div id="codesBox">
+            <label>Codec preferences: </label><select id="codecPreferences"></select>
+            <br>
+            <label>Recoder mime-type: </label><select id="codecSavePreferences"></select>
+            <br>
+            <label>Bandwidth(kbps):</label>
+            <select id="bandwidth">
+                <option value="unlimited" selected>default</option>
+                <option value="65536">65536</option>
+                <option value="32768">32768</option>
+                <option value="16384">16384</option>
+                <option value="8192">8192</option>
+                <option value="4096">4096</option>
+                <option value="2048">2048</option>
+                <option value="1024">1024</option>
+                <option value="512">512</option>
+                <option value="256">256</option>
+                <option value="128">128</option>
+                <option value="64">64</option>
+                <option value="32">32</option>
+            </select>
+            default=2M
+            <br>
+            <input id="useRecord" type="checkbox" value="" /><label> use recorder</label> 
+            <input id="videoLoop" type="checkbox" checked /><label> video loop</label> 
+        </div>
+
+        <div id="buttons">
+            <button id="fastTest">Fast Track</button>
+            <br>
+            <button id="getMedia">Get media</button>
+            <button id="createConnection" disabled>Create connection</button>
+            <button id="createOffer" disabled>Create offer</button>
+            <button id="setOffer" disabled>Set offer</button>
+            <button id="createAnswer" disabled>Create answer</button>
+            <button id="setAnswer" disabled>Set answer</button>
+            <button id="hangup" disabled>Hang up</button>
+        </div>
+
+        <div>
+            <button id="downloadbtn" disabled>Download</button>
+        </div>
+        <div id="sdp">
+            <div id="offer" style="display:none">
+                <h2>Offer SDP</h2>
+                <textarea></textarea>
+            </div>
+            <!--  -->
+            <div id="answer">
+                <h2>Answer SDP</h2>
+                <textarea></textarea>
+            </div>
+        </div>
+        <!-- <div>
+            <p>Video Resolution: <span id="video_width">1920</span>x<span id="video_height">1080</span></p>
+            <p>FPS: <span id="video_fps">30</span></p>
+        </div> -->
+        <!-- loop -->
+        
+        <br>
+        <div class="video_wrapper">
+            <video id="localvideo" playsinline muted loop>
+                <!-- controls -->
+                <!-- <source src="video/chrome.mp4" type="video/mp4" /> -->
+                <!-- <source src="video/zelda.mp4" type="video/mp4" /> -->
+                <source src="video/zelda.mp4" type="video/mp4" />
+                <p>This browser does not support the video element.</p>
+            </video>
+            <video id="remotevideo" playsinline autoplay></video>
+            <div class="overlay">
+                Res: <span id="video_width">1920</span>x<span id="video_height">1080</span>
+                <br>
+                FPS: <span id="video_fps">unknown</span>
+            </div>
+        </div>
+
+        <div class="graph-container" id="bitrateGraph">
+            <div>Bitrate</div>
+            <canvas id="bitrateCanvas"></canvas>
+        </div>
+        <div class="graph-container" id="packetGraph">
+            <div>Packets sent per second</div>
+            <canvas id="packetCanvas"></canvas>
+        </div>
+        <div class="graph-container" id="fpsGraph">
+            <div>FPS (<span id="span_fps"></span>)</div>
+            <canvas id="fpsCanvas"></canvas>
+        </div>
+        <div class="graph-container" id="resolutionGraph">
+            <div>Resolution (<span id="span_resolution"></span>P)</div>
+            <canvas id="resolutionCanvas"></canvas>
+        </div>
+        <div class="graph-container" id="framesGraph">
+            <div>Frames lost (<span id="span_frames"></span>%), i.e. (send-recv)/send</div>
+            <canvas id="framesCanvas"></canvas>
+            <button id="resetbtn">Frames count reset</button>
+        </div>
+
+
+
+    </div>
+    <script src="js/graph.js" async></script>
+    <script src="js/main.js" async></script>
+
+</body>
+
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>example</title>
+    <style>
+    .container { position:relative; }
+    .container video {
+        position:relative;
+        z-index:0;
+    }
+    .overlay {
+        position:absolute;
+        top: 0;
+        left: 1%;
+        z-index:1;
+    }
+
+    </style>
+</head>
+<body>
+    
+    <input id="useRecord" type="checkbox" value="" /><label> use recorder</label> 
+    <label>mime-type: </label><select id="codecSavePreferences"></select>
+    <button onclick="capture()">Capture</button>
+    <button onclick="download()">Download</button>
+
+    <br>
+    <div class="container">
+        <video id="video" width="640" height="360" controls>
+            <source src="video/zelda.mp4" type="video/mp4" />
+        </video>
+        <div class="overlay">
+            <p id="res" style="margin: 2px">unknown</p>
+            FPS: <span id="fps" style="margin: 2px">unknown</span>
+        </div>
+    </div>
+    <!-- 1920x1080 -->
+    <!-- <video id="video" src="video/zelda.mp4" type="video/mp4" width="640px" height="360px" controls></video> -->
+
+    <canvas id="canvas" style="overflow:auto" width="640" height="360"></canvas>
+    <div>
+        <p>duration: <span id="duration"></span> s </p>
+        <p>status: <span id="state">loaded</span> </p>
+    </div>
+    <script>
+        let mediaRecorder;
+        let recordedBlobs;
+        let useRecord;
+        let stream;
+        
+        const useRecordCheckBox = document.querySelector('input#useRecord');
+
+        video.onloadedmetadata = () => {
+            duration.innerText   = video.duration.toFixed(2);
+        }
+        video.onplay = () => {
+            state.innerText   = 'play';
+        }
+        video.onplaying = () => {
+            state.innerText   = 'playing';
+        }
+        video.onwaiting = () => {
+            state.innerText   = 'waiting';
+        }
+        video.onpause = () => {
+            state.innerText   = 'pause';
+        }
+        video.onended = () => {
+            state.innerText   = 'ended';
+        }
+
+        function capture() {
+            var canvas = document.getElementById('canvas');     
+            var video = document.getElementById('video');
+            // canvas.width = video.videoWidth;
+            // canvas.height = video.videoHeight;
+            ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, canvas.width, canvas.height);
+            // const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            // console.log(imageData);
+            // canvas.toBlob((blob) => {
+            //     // const img = new Image();
+            //     // img.src = URL.createObjectUrl(blob);
+			// 	const a = document.createElement('a');
+			// 	a.style.display = 'none';
+			// 	const url = URL.createObjectURL(blob);
+			// 	a.href = url;
+			// 	a.download = "screen_shot.jpg";
+			// 	a.click();
+            // });
+        }
+		const SIZE = 1;
+        let maxLocalDelay = -1;
+        let framespersecond = 30;
+
+        video.requestVideoFrameCallback(function rVFC(now, metaData) {
+            // console.log(now, metaData);
+            if (metaData.mediaTime === 0 || metaData.presentedFrames % SIZE !== 0){ 
+                video.requestVideoFrameCallback(rVFC);
+                return;
+            }
+            ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, canvas.width, canvas.height);
+            framespersecond = metaData.presentedFrames / metaData.mediaTime;
+            framespersecond = parseInt(framespersecond);
+            res.innerText = `${metaData.width}x${metaData.height}`;
+            fps.innerText = framespersecond;
+            console.log("frames");
+            video.requestVideoFrameCallback(rVFC);
+        });
+
+        function getSupportedMimeTypes() {
+            const possibleTypes = [
+                'video/webm;codecs=vp8,opus',
+                'video/webm;codecs=vp9,opus',
+                'video/webm;codecs=h264,opus',
+                'video/mp4;codecs=h264,aac',
+            ];
+            return possibleTypes.filter(mimeType => {
+                return MediaRecorder.isTypeSupported(mimeType);
+            });
+        }
+
+        getSupportedMimeTypes().forEach(mimeType => {
+            const option = document.createElement('option');
+            option.value = mimeType;
+            option.innerText = option.value;
+            document.getElementById('codecSavePreferences').appendChild(option);
+        });
+
+        function handleDataAvailable(event) {
+            // console.log('handleDataAvailable', event);
+            // if (event && event.data && event.data.size > 0) {
+            //     recordedBlobs.push(event.data);
+            // }
+        }
+
+        function startRecording() {
+            if (!useRecordCheckBox.checked){ return; }
+            recordedBlobs = [];
+            const mimeType = codecSavePreferences.options[codecSavePreferences.selectedIndex].value;
+            const options = {mimeType};
+
+            try {
+                mediaRecorder = new MediaRecorder(stream, options);
+            } catch (e) {
+                console.error('Exception while creating MediaRecorder:', e);
+                return;
+            }
+
+            console.log('Created MediaRecorder', mediaRecorder, 'with options', options);
+            mediaRecorder.onstop = (event) => {
+                console.log('Recorder stopped: ', event);
+                console.log('Recorded Blobs: ', recordedBlobs);
+            };
+            mediaRecorder.ondataavailable = handleDataAvailable;
+            mediaRecorder.start();
+            console.log('MediaRecorder started', mediaRecorder);
+        }
+
+        function stopRecording() {
+            if (!useRecordCheckBox.checked){ return;}
+            mediaRecorder.stop();
+            downloadButton.disabled = false;
+        }
+        
+        function download(){
+            if (!useRecordCheckBox.checked){
+                alert("not recorded!");
+                return;
+            }
+            const blob = new Blob(recordedBlobs, {type: 'video/webm'});
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'demo.webm';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 100);
+        }
+
+        video.onplay = () => {
+            stream = video.captureStream();
+            startRecording();
+        }
+        video.onended = () => {
+            stopRecording();
+            stream = null;
+        }
+
+        // const fps = 25;
+        // window.setInterval(() => {
+        //     if (video.paused){return;}
+        //     capture();
+        // }, 1000/fps);
+    </script>
+</body>
+</html>
